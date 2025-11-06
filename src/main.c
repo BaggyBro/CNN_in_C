@@ -24,7 +24,7 @@ int main(){
   free(C);
   free_matrix(D, 2);
   return 0;
-
+  
 }
 
 //TODO: backward pass -> backpropogration and training
