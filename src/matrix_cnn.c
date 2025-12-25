@@ -1,3 +1,4 @@
+// matrix_cnn.c
 #include "../include/matrix_cnn.h"
 #include "../include/matrix.h"
 #include <math.h>
@@ -127,22 +128,25 @@ double** maxpool_forward(double **input, int in_size, int pool_size, int *out_si
 /* Maxpool backward: d_out is out_size x out_size, d_input is in_size x in_size and must be zeroed by caller
    mask is the array returned from forward.
 */
-void maxpool_backward(double **d_out, int out_size, int pool_size, int in_size, int ***mask, double **d_input){
-  // zero d_input
-  for(int i=0;i<in_size;i++) for(int j=0;j<in_size;j++) d_input[i][j] = 0.0;
+void maxpool_backward(double **d_out, int out_size, int pool_size, int in_size,
+                      int **mask, double **d_input){
 
-  int **m = *mask;
-  for(int i=0;i<out_size;i++){
-    for(int j=0;j<out_size;j++){
-      int idx = m[i][j];
-      int p = idx / pool_size;
-      int q = idx % pool_size;
-      int in_i = i*pool_size + p;
-      int in_j = j*pool_size + q;
-      d_input[in_i][in_j] += d_out[i][j];
+    for(int i=0;i<in_size;i++)
+        for(int j=0;j<in_size;j++)
+            d_input[i][j] = 0.0;
+
+    for(int i=0;i<out_size;i++){
+        for(int j=0;j<out_size;j++){
+            int idx = mask[i][j];
+            int p = idx / pool_size;
+            int q = idx % pool_size;
+            int in_i = i * pool_size + p;
+            int in_j = j * pool_size + q;
+            d_input[in_i][in_j] += d_out[i][j];
+        }
     }
-  }
 }
+
 
 /* Dense forward: input is length input_size, weights is output_size x input_size, bias length output_size
    returns allocated output length output_size
@@ -171,7 +175,7 @@ void dense_backward(double *d_out, double *input, int input_size, double **weigh
   for(int i=0;i<output_size;i++){
     d_bias[i] = d_out[i];
     for(int j=0;j<input_size;j++){
-      d_weights[i][j] = d_out[i] * input[j];
+      d_weights[i][j] += d_out[i] * input[j];
       d_input[j] += weights[i][j] * d_out[i];
     }
   }
